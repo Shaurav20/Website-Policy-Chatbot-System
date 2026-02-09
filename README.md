@@ -179,15 +179,9 @@ json
 
 **Solution**:
 
-- Uploaded the Privacy Policy PDF to my website server's (hosting partner of my website, Trovinest, is Hostinger) public.html directory
+- Uploaded the Privacy Policy PDF to my website server's (Hostinger) public.html directory
 - Used HTTP Request node with direct URL: <https://trovinest.com/Privacy%20Policy.pdf>
 - Processed through Extract from File node for text extraction
-
-**Technical Details**:
-
-- Hostinger server provides public file access
-- HTTP Request node handles binary PDF data
-- Extract from File node converts PDF to plain text
 
 **Challenge 2: Vector Database Dimension Mismatch**
 
@@ -201,12 +195,6 @@ json
   - Metric: Cosine similarity (for semantic search)
   - Cloud provider: AWS
 - Verified embedding compatibility between Gemini and Pinecone
-
-**Why 3072 dimensions?**
-
-- Google Gemini embedding model outputs 768-dimensional vectors
-- Pinecone recommendation for optimal performance
-- Allows for future model upgrades without re-indexing
 
 **Challenge 3: Intelligent Chunking for Policy Documents**
 
@@ -226,14 +214,23 @@ json
 - **Overlap**: Added 100-character overlap to maintain context across chunks
 - **Validation**: Tested retrieval accuracy with sample queries
 
-**Why this configuration works for policy documents**:
+**Challenge 4: Strategic Metadata Implementation**
 
-- Policy clauses typically range from 500-1500 characters
-- 2000-character chunks capture complete ideas
-- 5% overlap ensures context preservation
-- Recursive splitting respects document structure
+**Problem**: Retrieved documents lacked contextual information for precise filtering and source attribution.
 
-**Challenge 4: Chatbot Response Control**
+**Solution**: Enhanced data ingestion with comprehensive metadata:
+
+- **Added metadata fields** in Default Data Loader node:
+  - policy_type: "privacy" (document categorization)
+  - document_name: "privacy_policy" (specific document identification)
+  - version: "2025-12" (version control for policy updates)
+  - source: "privacy_policy_page" (traceability to original source)
+- **Metadata benefits during chatbot execution**:
+  - **Filtered retrieval**: Enables querying specific policy types only
+  - **Version-aware responses**: Provides information from correct policy versions
+  - **Source attribution**: Cites exact document sources in answers
+
+**Challenge 5: Chatbot Response Control**
 
 **Problem**: AI agent was providing generic information or going outside policy scope.
 
@@ -246,13 +243,11 @@ json
 
 **Agent Instruction Structure**:
 
-text
-
 ROLE & TONE → SCOPE LIMITATION → STEP 0: INTRO → STEP 1: VALIDATION →
 
 STEP 2: RETRIEVAL → STEP 3: ANSWER → STEP 4: FALLBACK → STEP 5: OUTPUT
 
-**Challenge 5: Conversation State Management**
+**Challenge 6: Conversation State Management**
 
 **Problem**: Maintaining user identity and conversation context across sessions.
 
@@ -263,7 +258,7 @@ STEP 2: RETRIEVAL → STEP 3: ANSWER → STEP 4: FALLBACK → STEP 5: OUTPUT
 - **Session Tracking**: Unique session IDs for each chat
 - **Persistent Storage**: Google Sheets for all interactions
 
-**Challenge 6: Error Handling in Production**
+**Challenge 7: Error Handling in Production**
 
 **Problem**: Workflow failures without proper logging or recovery.
 
@@ -271,6 +266,8 @@ STEP 2: RETRIEVAL → STEP 3: ANSWER → STEP 4: FALLBACK → STEP 5: OUTPUT
 
 - **Google Sheets Logging**: All interactions with timestamps
 - **Conditional Logic**: IF node for validation checks
+- **Structured Error Messages**: Clear feedback to users
+- **Execution Monitoring**: n8n built-in execution history
 
 **📊 Data Storage**
 
@@ -389,17 +386,6 @@ Expected: Fallback response about policy scope
 - Share spreadsheet with service account
 - Check OAuth scopes in credential setup
 - Verify sheet name and ID
-
-**Issue 6: Poor Retrieval Accuracy**
-
-**Symptoms**: Chatbot provides irrelevant or incomplete answers
-**Solutions**:
-
-- Verify metadata setup: Ensure all metadata fields are properly populated during ingestion
-- Check chunking: Confirm chunks preserve complete policy clauses (2000 chars with 100 overlap)
-- Validate embeddings: Confirm Pinecone index uses 3072 dimensions compatible with Gemini
-
-Metadata Note: The strategic metadata added in ingestion (policy_type, document_name, version, source) enables filtered searches and better relevance scoring during chatbot retrieval.
 
 **Testing Requirements**
 
