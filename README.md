@@ -390,6 +390,17 @@ Expected: Fallback response about policy scope
 - Check OAuth scopes in credential setup
 - Verify sheet name and ID
 
+**Issue 6: Poor Retrieval Accuracy**
+
+**Symptoms**: Chatbot provides irrelevant or incomplete answers
+**Solutions**:
+
+- Verify metadata setup: Ensure all metadata fields are properly populated during ingestion
+- Check chunking: Confirm chunks preserve complete policy clauses (2000 chars with 100 overlap)
+- Validate embeddings: Confirm Pinecone index uses 3072 dimensions compatible with Gemini
+
+Metadata Note: The strategic metadata added in ingestion (policy_type, document_name, version, source) enables filtered searches and better relevance scoring during chatbot retrieval.
+
 **Testing Requirements**
 
 **Must Test**:
