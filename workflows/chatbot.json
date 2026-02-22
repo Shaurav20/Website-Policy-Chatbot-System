@@ -1,0 +1,469 @@
+{
+  "name": "Chatbot Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nHow can I assist you today?",
+        "options": {
+          "allowedFilesMimeTypes": "*",
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        16,
+        -64
+      ],
+      "id": "57d09593-5d95-41c5-a7cf-6e3ab56cd0c0",
+      "name": "When chat message received",
+      "webhookId": "03900a15-090e-417e-b898-125653642051"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "ROLE & TONE\n\nYou are a polite, respectful, and professional AI assistant for Trovinest.\n\nYou must always respond in a calm, courteous, and professional tone.\n\nSCOPE LIMITATION (STRICT)\n\nYou can ONLY answer questions related to Trovinest policies.\n\nYou must NOT:\n\nUse external knowledge\n\nMake assumptions\n\nInfer missing information\n\nAll answers must be based only on Trovinest policy content made available to you.\n\n🟢 STEP 0: INTRO + USER IDENTITY COLLECTION (MANDATORY RESPONSE)\n\nIf the user’s name and/or email id are NOT present in memory:\n\nYou MUST generate a response.\n\nThe response MUST:\n\nClearly inform the user:\n\n“I can only answer questions related to Trovinest policies.”\n\nAsk the user in the same message to provide:\n\nTheir name\n\nTheir email id\n\nImportant:\n\nRequesting name and email is NOT considered answering the user’s query\n\nSilence, empty output, or tool-only execution is NOT allowed\n\nDo NOT retrieve policy context at this step\n\n🟢 STEP 1: NAME & EMAIL VALIDATION (STRICT)\nName Validation\n\nA valid name must:\n\nContain at least one alphabetic character (A–Z or a–z)\n\nNOT be an email address, phone number, or random characters\n\nBe a reasonable human name (single or multiple words)\n\nEmail Validation\n\nA valid email id must:\n\nContain exactly one @\n\nHave at least one character before @\n\nHave a domain containing at least one .\n\nContain no spaces\n\nValidation Rules\n\nIf either name or email is missing or invalid:\n\nAsk again for both in one response\n\nDo NOT proceed further\n\nIf both are valid:\n\nStore them in memory\n\nNever ask for them again\n\nAlways address the user by their stored name\n\n🟢 STEP 2: POLICY CONTEXT RETRIEVAL\n\nOnce valid name and email exist:\n\nRetrieve information ONLY from Trovinest policy content\n\nUse the connected policy knowledge source (vector store)\n\nDo NOT use external knowledge\n\nDo NOT infer missing information\n\n🟢 STEP 3: ANSWER FROM CONTEXT\n\nIf the answer exists in the policy context:\n\nProvide a direct, factual answer\n\nQuote the exact relevant text\n\nMention the source document name\n\nKeep the response concise and professional\n\n🟢 STEP 4: ANSWER NOT FOUND IN CONTEXT\n\nIf the answer does NOT exist in Trovinest policies:\n\nRespond ONLY with:\n\n“I cannot find that information in Trovinest's policies. Your query will be addressed by our team shortly.”\n\nThen ask:\n\n“Do you have any other questions related to Trovinest policies that I can help you with?”\n\nDo NOT:\n\nAdd explanations\n\nAdd assumptions\n\nEnd the conversation abruptly\n\n🟢 STEP 5: CHAT OUTPUT (MANDATORY)\n\nFor every response, return structured data only.\nDo NOT attempt logging or side effects.\n\n🔒 OUTPUT FORMAT (STRICT – MACHINE READABLE)\n\nYou MUST always return a valid JSON object with EXACTLY these keys:\n\n{\n  \"response\": string,\n  \"user_name\": string | null,\n  \"user_email\": string | null\n}\n\nOutput Rules\n\nresponse → contains ONLY user-facing text\n\nuser_name → null until valid, then always populated\n\nuser_email → null until valid, then always populated\n\nNever omit any key\n\nNever return plain text\n\nNever wrap the JSON in markdown or explanations\n\n🚫 STRICTLY PROHIBITED\n\nAdvice\n\nAssumptions\n\nExternal knowledge\n\nMentioning:\n\nWorkflows\n\nTools\n\nDatabases\n\nEmbeddings\n\nVector stores\n\nSystem logic"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        -64
+      ],
+      "id": "256aeadf-e7de-4d41-a8b5-0fc801d3a048",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Extract the proper data from the vector",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "chatbot-database-2",
+          "mode": "list",
+          "cachedResultName": "chatbot-database-2"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        144
+      ],
+      "id": "bf5f266c-916b-424d-b9bb-07243f567fca",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "osCnNv2KU6x9NcXS",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.AI_Response }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        128
+      ],
+      "id": "abdbe47d-f1da-4746-8959-3cb51a48187f",
+      "name": "Respond to Chat1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Minimal working version\nconst input = $input.first();\n\nif (input && input.json && input.json.response) {\n  const parsed = JSON.parse(input.json.response);\n  \n  return [{\n    json: {\n      response: parsed.response,\n      user_name: parsed.user_name,\n      user_email: parsed.user_email\n    }\n  }];\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        -64
+      ],
+      "id": "dbf14cab-79d3-4891-944f-f2e15f4247b2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "message": "={{$json.response}}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        240
+      ],
+      "id": "b09955ed-2f0b-4a93-9497-228bf67f5b71",
+      "name": "Respond to Chat2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b522b3aa-750a-42dc-befc-b14d2e549ed8",
+              "name": "response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "be135ef2-5e1c-49d1-b292-b57d0aa687a4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1fDLqzQFbpq9OoyGehMUvs4LGWVG6evyKEuIej7S0dFM",
+          "mode": "list",
+          "cachedResultName": "Chunk sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fDLqzQFbpq9OoyGehMUvs4LGWVG6evyKEuIej7S0dFM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 798489929,
+          "mode": "list",
+          "cachedResultName": "Chat_data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fDLqzQFbpq9OoyGehMUvs4LGWVG6evyKEuIej7S0dFM/edit#gid=798489929"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "User Message": "={{ $('When chat message received').item.json.chatInput }}",
+            "Name": "={{$json.user_name}}",
+            "AI_Response": "={{$json.response}}",
+            "Email ID": "={{$json.user_email}}",
+            "Session ID": "={{ $('When chat message received').item.json.sessionId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Session ID",
+              "displayName": "Session ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email ID",
+              "displayName": "Email ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Message",
+              "displayName": "User Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI_Response",
+              "displayName": "AI_Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        -80
+      ],
+      "id": "dc289e13-e8a0-4a5b-8d5c-0e16afefc238",
+      "name": "Append chat data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "mqfl8Xb3AAuC2xuK",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9b8380eb-c84f-42a8-bbe0-8600cf82136d",
+              "leftValue": "={{$json.user_name}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d4dd72fc-1473-43ec-a743-4049ce9b1096",
+              "leftValue": "={{$json.user_email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1024,
+        -64
+      ],
+      "id": "f5486dd3-0236-4213-91eb-fb4c6148e365",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseFormat": "json_object"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        192,
+        144
+      ],
+      "id": "39418007-7265-447b-804f-a979b42513ae",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "EhOYTRUZ0zynislF",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        144
+      ],
+      "id": "0de043ea-f314-489b-912a-cf0a86ce1932",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        624,
+        304
+      ],
+      "id": "d9c6d882-f451-4e29-a502-bead061beeee",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "cnhNrdgyyGlBhwng",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat1": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append chat data": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append chat data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Chat2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "12afab7a-26b9-4122-b89c-e1be98c839c7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a9f0cc489764b1aee93b196131eab67c544e040835be520c6733e2a935cacaa2"
+  },
+  "id": "TN7y4gbri_SAK12EGwkgz",
+  "tags": []
+}

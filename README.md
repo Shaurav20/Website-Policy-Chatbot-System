@@ -1,18 +1,15 @@
-# Website-Policy-Chatbot-System
-RAG system for querying website policy documents 
-
-**📚 Website Policy Chatbot System**
+# Website Policy Chatbot System
 
 A complete RAG (Retrieval-Augmented Generation) system for querying a website's (here I have used my website's name, which is Trovinest, in creating the workflows) policy documents using n8n workflows with Pinecone vector database, Google Gemini embeddings, and DeepSeek LLM.
 
-**🎯 Overview**
+## Overview
 
 This system solves the problem of providing accurate, policy-specific information to users while maintaining strict data privacy and conversation structure. It consists of two interconnected n8n workflows:
 
 - **Data Ingestion Workflow** - Processes PDF policy documents into Pinecone vector database
 - **Chatbot Workflow** - Provides intelligent Q&A based on stored policy information
 
-**📂 Project Structure**
+## Project Structure
 
 website-chatbot-system/
 
@@ -22,23 +19,17 @@ website-chatbot-system/
 
 │ └── chatbot.json # Q&A chatbot workflow
 
-├── docs/
+├── images/
 
-│ ├── architecture.md # Detailed architecture
+│ ├── data-ingestion # data-ingestion workflow design image in n8n
 
-│ ├── setup-guide.md # Step-by-step setup
+│ └── chatbot # chatbot workflow design image in n8n
 
-│ └── troubleshooting.md # Common issues & solutions
+├── LICENSE
 
-├── scripts/
+└── README.md
 
-│ ├── test-ingestion.py # Test ingestion process
-
-│ └── validate-responses.py # Validate chatbot outputs
-
-└── README.md # This file
-
-**🚀 Quick Start**
+## Quick Start
 
 **Prerequisites**
 
@@ -103,7 +94,7 @@ _\# Google Sheets_
 
 GOOGLE_SHEETS_DOC_ID=1fDLqzQFbpq9OoyGehMUvs4LGWVG6evyKEuIej7S0dFM
 
-**⚙️ Workflow Details**
+## Workflow Details
 
 **1\. Data Ingestion Workflow**
 
@@ -139,7 +130,7 @@ Chat Trigger → AI Agent → Memory Buffer → DeepSeek LLM → Pinecone Retrie
 - **Structured Responses**: JSON format enforcement
 - **Conversation Logging**: All interactions stored in Google Sheets
 
-**🎯 Agent Configuration**
+## Agent Configuration
 
 The AI Agent is configured with strict instructions:
 
@@ -171,7 +162,7 @@ json
 
 }
 
-**🔧 Problem Solving & Implementation**
+## Problem Solving & Implementation
 
 **Challenge 1: PDF Document Loading Issues**
 
@@ -269,7 +260,7 @@ STEP 2: RETRIEVAL → STEP 3: ANSWER → STEP 4: FALLBACK → STEP 5: OUTPUT
 - **Structured Error Messages**: Clear feedback to users
 - **Execution Monitoring**: n8n built-in execution history
 
-**📊 Data Storage**
+## Data Storage
 
 **Pinecone Vector Database**
 
@@ -291,7 +282,7 @@ STEP 2: RETRIEVAL → STEP 3: ANSWER → STEP 4: FALLBACK → STEP 5: OUTPUT
   - Email ID: Collected email
   - Session ID: Unique session identifier
 
-**🔍 Testing the System**
+## Testing the System
 
 **Test Ingestion Process**
 
@@ -334,7 +325,7 @@ User: "What's the weather today?"
 
 Expected: Fallback response about policy scope
 
-**🐛 Troubleshooting**
+## Troubleshooting
 
 **Common Issues & Solutions**
 
@@ -387,7 +378,7 @@ Expected: Fallback response about policy scope
 - Check OAuth scopes in credential setup
 - Verify sheet name and ID
 
-**Testing Requirements**
+## Testing Requirements
 
 **Must Test**:
 
@@ -403,30 +394,30 @@ Expected: Fallback response about policy scope
 - Error handling functional
 - Documentation updated
 
-**Code Standards**
-
-- **n8n Workflows**: Clear node naming, comments where needed
-- **Documentation**: Complete, accurate, up-to-date
-- **Configuration**: Environment variables, not hard-coded values
-- **Security**: No sensitive data in repository
-
-**📄 License**
-
-\[Specify your license - e.g., MIT, Proprietary\]
-
-**For Technical Support**:
-
-- Check troubleshooting guide first
-- Review n8n documentation
-- Contact system administrator
-
-**Lessons Learned**
+## Lessons Learned
 
 - **Chunking is Critical**: Document structure determines optimal chunk size
 - **Agent Instructions Matter**: Clear, strict prompts prevent scope creep
 - **Testing is Essential**: Multiple test scenarios save production issues
 - **Monitoring is Non-Negotiable**: Proactive monitoring prevents major failures
 
-**Last Updated**: \[Current Date\]  
-**Version**: 1.0.0  
-**Maintainer**: \[Your Name/Team\]
+## License
+
+This project is licensed under the MIT License. You are free to use, modify, and distribute this code with appropriate attribution.
+
+## Author
+Shaurav Bhattacharyya
+
+- GitHub: @Shaurav20 (https://github.com/Shaurav20)
+- LinkedIn: Shaurav Bhattacharyya (https://www.linkedin.com/in/shaurav-bhattacharyya-a347b5156/)
+- Email: shaurav.feb@gmail.com
+
+## Acknowledgements
+
+n8n for the workflow automation platform
+
+Pinecone for the vector database infrastructure
+
+Google Gemini for embedding models
+
+DeepSeek for the LLM capabilities
