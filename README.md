@@ -10,7 +10,7 @@ This system solves the problem of providing accurate, policy-specific informatio
 - **Chatbot Workflow** - Provides intelligent Q&A based on stored policy information
 
 ## Project Structure
-
+```
 website-chatbot-system/
 
 ├── workflows/
@@ -28,6 +28,7 @@ website-chatbot-system/
 ├── LICENSE
 
 └── README.md
+```
 
 ## Quick Start
 
